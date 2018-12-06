@@ -2,6 +2,7 @@ use error::Error;
 use serde_yaml;
 use std::fs;
 use std::path::{Path, PathBuf};
+use url::Url;
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct PathGitIgnore {
@@ -22,12 +23,15 @@ pub struct SvnItem {
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct SvnGroup {
     pub rev: Option<usize>,
-    pub url_base: Option<String>,
+    #[serde(with = "url_serde")]
+    pub url_base: Option<Url>,
     pub items: Vec<SvnItem>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct File {
+    #[serde(default)]
+    pub gitignore: Vec<String>,
     #[serde(rename = "svn")]
     pub svn_group: SvnGroup,
 }

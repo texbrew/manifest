@@ -2,6 +2,7 @@ use error::Error;
 use std::ffi::OsString;
 use std::io::{BufRead, BufReader};
 use std::path::{Path, PathBuf};
+use url::Url;
 use which::which;
 
 #[derive(Debug)]
@@ -56,7 +57,7 @@ impl Svn {
         &self,
         quiet: bool,
         rev: Option<usize>, // https://svn.haxx.se/users/archive-2005-03/0394.shtml
-        url: &str,
+        url: &Url,
         path: Option<&Path>,
     ) -> Result<(), Error> {
         let mut args: Vec<OsString> = Vec::with_capacity(6);
@@ -68,7 +69,7 @@ impl Svn {
             args.push(OsString::from("--revision"));
             args.push(OsString::from(rev.to_string()));
         }
-        args.push(OsString::from(url));
+        args.push(OsString::from(url.as_str()));
         if let Some(path) = path {
             args.push(OsString::from(path));
         }

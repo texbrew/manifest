@@ -20,27 +20,64 @@ mod which;
 
 use error::Error;
 use file::File;
+use gitignore::{GitIgnore, SubPaths};
 use opt::Opt;
 use std::path::Path;
 use std::path::PathBuf;
 use svn::Svn;
+use url::Url;
 
 pub fn run() -> Result<(), Error> {
     let opt = Opt::new()?;
     let file = File::new(Path::new("manifest.yml"))?;
     log::debug!("File: {:?}", file);
+
     let svn = Svn::new()?;
+
+    let exclude_all = file.gitignore.to_owned();
+    let mut exclude_paths = Vec::new();
+    let mut include_paths = Vec::new();
+
     for file::SvnItem {
         url,
         rev,
         path,
-        gitignore: _,
+        gitignore,
     } in file.svn_group.items
     {
-        let url = match file.svn_group.url_base.to_owned() {
-            None => url,
-            Some(url_base) => url_base + &url,
+        // Extract the complete URL from the optional url_base and required SvnItem::url.
+        let url = match &file.svn_group.url_base {
+            None => Url::parse(&url)?,
+            Some(url_base) if url_base.cannot_be_a_base() => {
+                return Err(Error::from(format!(
+                    "url_base is not a URL base: {}",
+                    &url_base
+                )))
+            }
+            Some(url_base) => url_base.join(&url)?,
         };
+
+        let dir: &str = match &path {
+            Some(path) => path
+                .to_str()
+                .ok_or_else(|| format!("Path is not valid UTF-8: {}", url.as_str()))?,
+            None => {
+                let dir = url
+                    .path_segments()
+                    .ok_or_else(|| format!("URL has no path: {}", url.as_str()))?
+                    .last()
+                    .unwrap();
+                if dir.is_empty() {
+                    return Err(Error::from(format!("URL missing a path: {}", url.as_str())));
+                }
+                dir
+            }
+        };
+        if let Some(gitignore) = gitignore {
+            exclude_paths.push(SubPaths(dir.to_string(), gitignore.exclude));
+            include_paths.push(SubPaths(dir.to_string(), gitignore.include));
+        }
+
         svn.checkout(
             opt.quiet,
             rev.or(file.svn_group.rev),
@@ -48,7 +85,12 @@ pub fn run() -> Result<(), Error> {
             path.as_ref().map(PathBuf::as_path),
         )?
     }
-    Ok(())
+
+    GitIgnore {
+        exclude_all,
+        exclude_paths,
+        include_paths,
+    }.to_file(Path::new("./"))
 }
 
 #[cfg(test)]
