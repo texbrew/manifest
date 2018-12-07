@@ -18,7 +18,7 @@ impl<'a> duct::ToExecutable for &'a Svn {
 }
 
 impl Svn {
-    pub fn init() -> Result<Svn, Error> {
+    pub fn cmd() -> Result<Svn, Error> {
         let path = which(String::from("svn"))?;
         let cmd = duct::cmd!(&path, "--version", "--quiet");
         let svn = Svn {
