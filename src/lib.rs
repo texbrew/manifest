@@ -28,11 +28,11 @@ use svn::Svn;
 use url::Url;
 
 pub fn run() -> Result<(), Error> {
-    let opt = Opt::new()?;
-    let file = File::new(Path::new("manifest.yml"))?;
+    let opt = Opt::init()?;
+    let file = File::parse(Path::new("manifest.yml"))?;
     log::debug!("File: {:?}", file);
 
-    let svn = Svn::new()?;
+    let svn = Svn::init()?;
 
     let exclude_all = file.gitignore.to_owned();
     let mut exclude_paths = Vec::new();
@@ -176,10 +176,10 @@ mod tests {
     #[test]
     fn svn_create_add_commit_checkout() -> Result<(), TestError> {
         let repo_dir = tempdir()?;
-        SvnAdmin::new()?.create(repo_dir.path())?;
+        SvnAdmin::init()?.create(repo_dir.path())?;
         let repo_url = format!("file://{}", repo_dir.path().display());
 
-        let svn = Svn::new()?;
+        let svn = Svn::init()?;
 
         let entries1 = {
             let checkout_dir = tempdir()?;

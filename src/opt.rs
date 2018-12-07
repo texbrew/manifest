@@ -14,7 +14,7 @@ pub struct Opt {
 }
 
 impl Opt {
-    pub fn new() -> Result<Opt, Error> {
+    pub fn init() -> Result<Opt, Error> {
         let opt = Opt::from_args();
 
         stderrlog::new()

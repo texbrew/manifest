@@ -37,7 +37,7 @@ pub struct File {
 }
 
 impl File {
-    pub fn new(path: &Path) -> Result<File, Error> {
+    pub fn parse(path: &Path) -> Result<File, Error> {
         log::debug!("Opening path: {:?}", path);
         let file = fs::File::open(path)?;
         Ok(serde_yaml::from_reader(file)?)

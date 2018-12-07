@@ -18,7 +18,7 @@ impl<'a> duct::ToExecutable for &'a Svn {
 }
 
 impl Svn {
-    pub fn new() -> Result<Svn, Error> {
+    pub fn init() -> Result<Svn, Error> {
         let path = which(String::from("svn"))?;
         let cmd = duct::cmd!(&path, "--version", "--quiet");
         let svn = Svn {
@@ -38,7 +38,7 @@ impl Svn {
     }
 
     // http://svnbook.red-bean.com/en/1.7/svn.ref.svn.c.add.html
-    pub fn add(&self, quiet: bool, paths: Vec<&Path>) -> Result<(), Error> {
+    pub fn add(&self, quiet: bool, paths: &[&Path]) -> Result<(), Error> {
         let mut args: Vec<OsString> = Vec::with_capacity(2 + paths.len());
         args.push(OsString::from("add"));
         if quiet {
@@ -100,7 +100,7 @@ impl Svn {
     }
 
     // http://svnbook.red-bean.com/en/1.7/svn.ref.svn.c.commit.html
-    pub fn commit(&self, quiet: bool, msg: &str, paths: Vec<&Path>) -> Result<(), Error> {
+    pub fn commit(&self, quiet: bool, msg: &str, paths: &[&Path]) -> Result<(), Error> {
         let mut args: Vec<OsString> = Vec::with_capacity(4 + paths.len());
         args.push(OsString::from("commit"));
         if quiet {
