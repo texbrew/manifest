@@ -90,7 +90,8 @@ pub fn run() -> Result<(), Error> {
         exclude_all,
         exclude_paths,
         include_paths,
-    }.to_file(Path::new("./"))
+    }
+    .to_file(Path::new("./"))
 }
 
 #[cfg(test)]
