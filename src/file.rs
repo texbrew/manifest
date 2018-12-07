@@ -1,4 +1,5 @@
-use error::Error;
+use crate::error::Error;
+use serde_derive::{Deserialize, Serialize};
 use serde_yaml;
 use std::fs;
 use std::path::{Path, PathBuf};

@@ -1,15 +1,3 @@
-extern crate duct;
-extern crate log;
-extern crate stderrlog;
-extern crate structopt;
-extern crate tempfile;
-extern crate which as libwhich;
-#[macro_use]
-extern crate serde_derive;
-extern crate serde_yaml;
-extern crate url;
-extern crate walkdir;
-
 mod error;
 mod file;
 mod gitignore;
@@ -18,13 +6,13 @@ mod svn;
 mod svnadmin;
 mod which;
 
-use error::Error;
-use file::File;
-use gitignore::{GitIgnore, SubPaths};
-use opt::Opt;
+use crate::error::Error;
+use crate::file::File;
+use crate::gitignore::{GitIgnore, SubPaths};
+use crate::opt::Opt;
+use crate::svn::Svn;
 use std::path::Path;
 use std::path::PathBuf;
-use svn::Svn;
 use url::Url;
 
 pub fn run() -> Result<(), Error> {
@@ -97,32 +85,38 @@ pub fn run() -> Result<(), Error> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::svnadmin::SvnAdmin;
     use std::env;
     use std::fmt::{self, Display, Formatter};
     use std::io;
     use std::path;
-    use svnadmin::SvnAdmin;
     use tempfile::{tempdir, Builder};
     use walkdir::{DirEntry, WalkDir};
 
     #[derive(Debug)]
     pub enum TestError {
-        LibError(super::Error),
+        LibError(Error),
         WalkDirError(walkdir::Error),
         StripPrefixError(path::StripPrefixError),
     }
 
     use self::TestError::*;
 
-    impl From<super::Error> for TestError {
-        fn from(e: super::Error) -> TestError {
+    impl From<Error> for TestError {
+        fn from(e: Error) -> TestError {
             LibError(e)
         }
     }
 
     impl From<io::Error> for TestError {
         fn from(e: io::Error) -> TestError {
-            LibError(super::Error::from(e))
+            LibError(Error::from(e))
+        }
+    }
+
+    impl From<url::ParseError> for TestError {
+        fn from(e: url::ParseError) -> TestError {
+            LibError(Error::from(e))
         }
     }
 
@@ -178,7 +172,7 @@ mod tests {
     fn svn_create_add_commit_checkout() -> Result<(), TestError> {
         let repo_dir = tempdir()?;
         SvnAdmin::cmd()?.create(repo_dir.path())?;
-        let repo_url = format!("file://{}", repo_dir.path().display());
+        let repo_url = Url::parse(&format!("file://{}", repo_dir.path().display()))?;
 
         let svn = Svn::cmd()?;
 
@@ -193,8 +187,8 @@ mod tests {
             let pwd = env::current_dir()?;
             env::set_current_dir(checkout_dir.path())?;
 
-            svn.add(false, vec![file.path()])?;
-            svn.commit(false, "new file", Vec::new())?;
+            svn.add(false, &vec![file.path()])?;
+            svn.commit(false, "new file", &[])?;
 
             env::set_current_dir(pwd)?;
 

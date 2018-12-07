@@ -10,7 +10,7 @@ pub enum Error {
     StringError(String),
 }
 
-use Error::*;
+use self::Error::*;
 
 impl From<io::Error> for Error {
     fn from(e: io::Error) -> Error {

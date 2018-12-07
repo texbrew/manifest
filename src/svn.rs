@@ -1,9 +1,9 @@
-use error::Error;
+use crate::error::Error;
+use crate::which::which;
 use std::ffi::OsString;
 use std::io::{BufRead, BufReader};
 use std::path::{Path, PathBuf};
 use url::Url;
-use which::which;
 
 #[derive(Debug)]
 pub struct Svn {
@@ -19,7 +19,7 @@ impl<'a> duct::ToExecutable for &'a Svn {
 
 impl Svn {
     pub fn cmd() -> Result<Svn, Error> {
-        let path = which(String::from("svn"))?;
+        let path = which("svn")?;
         let cmd = duct::cmd!(&path, "--version", "--quiet");
         let svn = Svn {
             path,
