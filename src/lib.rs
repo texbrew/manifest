@@ -40,7 +40,7 @@ pub fn run() -> Result<(), Error> {
                 return Err(Error::from(format!(
                     "url_base is not a URL base: {}",
                     &url_base
-                )))
+                )));
             }
             Some(url_base) => url_base.join(&url)?,
         };
